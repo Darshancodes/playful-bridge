@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   ChevronRight, 
   PlusCircle, 
@@ -8,14 +8,15 @@ import {
   FileX, 
   DollarSign, 
   BarChart3, 
-  Upload
+  Upload,
+  ImageIcon
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCreatives } from '@/context/CreativeContext';
 import { useMetaAds } from '@/context/MetaAdsContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Table, 
@@ -107,7 +108,7 @@ const BrandDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
-                <Image className="h-5 w-5 text-blue-600 mr-2" />
+                <ImageIcon className="h-5 w-5 text-blue-600 mr-2" />
                 <span className="text-2xl font-bold">{activeCreatives.length}</span>
               </div>
             </CardContent>
@@ -121,7 +122,7 @@ const BrandDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
-                <BarChart className="h-5 w-5 text-blue-600 mr-2" />
+                <BarChart3 className="h-5 w-5 text-blue-600 mr-2" />
                 <span className="text-2xl font-bold">{totalImpressions.toLocaleString()}</span>
               </div>
             </CardContent>
@@ -310,7 +311,7 @@ const CreatorDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
-                <Image className="h-5 w-5 text-blue-600 mr-2" />
+                <ImageIcon className="h-5 w-5 text-blue-600 mr-2" />
                 <span className="text-2xl font-bold">{approvedCreatives.length}</span>
               </div>
             </CardContent>
@@ -324,7 +325,7 @@ const CreatorDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
-                <BarChart className="h-5 w-5 text-blue-600 mr-2" />
+                <BarChart3 className="h-5 w-5 text-blue-600 mr-2" />
                 <span className="text-2xl font-bold">{pendingCreatives.length}</span>
               </div>
             </CardContent>
