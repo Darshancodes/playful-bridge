@@ -12,7 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { useMetaAds } from '@/context/MetaAdsContext';
 import FadeIn from '@/components/animation/FadeIn';
+import { Facebook } from 'lucide-react';
 
 // Define validation schema based on user role
 const brandSchema = z.object({
@@ -30,7 +32,8 @@ const creatorSchema = z.object({
 });
 
 const Profile = () => {
-  const { user, updateUserProfile } = useAuth();
+  const { user, updateProfile } = useAuth();
+  const { connected, connecting, connectToMetaAds, disconnectMetaAds } = useMetaAds();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -66,7 +69,7 @@ const Profile = () => {
     try {
       // In a real app, this would make an API call
       // For the MVP, we'll just update the local state
-      updateUserProfile(data);
+      updateProfile(data);
       
       toast({
         title: "Profile updated",
@@ -83,6 +86,38 @@ const Profile = () => {
     }
   };
 
+  const handleMetaConnect = async () => {
+    try {
+      await connectToMetaAds();
+      toast({
+        title: "Connected to Meta Ads",
+        description: "Your Meta Ads account has been successfully connected.",
+      });
+    } catch (error) {
+      toast({
+        title: "Connection Failed",
+        description: "There was a problem connecting to Meta Ads.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMetaDisconnect = async () => {
+    try {
+      await disconnectMetaAds();
+      toast({
+        title: "Disconnected from Meta Ads",
+        description: "Your Meta Ads account has been disconnected.",
+      });
+    } catch (error) {
+      toast({
+        title: "Disconnection Failed",
+        description: "There was a problem disconnecting from Meta Ads.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto">
@@ -92,7 +127,7 @@ const Profile = () => {
         </FadeIn>
 
         <FadeIn delay={0.1}>
-          <Card>
+          <Card className="mb-8">
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
               <CardDescription>
@@ -221,6 +256,60 @@ const Profile = () => {
               </Form>
             </CardContent>
           </Card>
+
+          {user.role === 'brand' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Meta Ads Integration</CardTitle>
+                <CardDescription>
+                  Connect your Meta Ads account to track ad performance and spend
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-blue-100 p-3 rounded-full">
+                      <Facebook className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Meta Ads Account</h3>
+                      <p className="text-sm text-gray-500">
+                        {connected ? "Connected" : "Not connected"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {connected ? (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Your Meta Ads account is connected. You can now track performance and spend for your creatives.
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleMetaDisconnect} 
+                        disabled={connecting}
+                      >
+                        Disconnect Account
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Connect your Meta Ads account to track performance metrics and ad spend for your creatives.
+                      </p>
+                      <Button 
+                        onClick={handleMetaConnect} 
+                        disabled={connecting}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        {connecting ? "Connecting..." : "Connect Meta Ads"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </FadeIn>
       </div>
     </DashboardLayout>

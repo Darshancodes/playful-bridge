@@ -9,6 +9,7 @@ interface User {
   email: string;
   role: UserRole;
   name: string;
+  bio?: string;
   companyName?: string;
   industry?: string;
   website?: string;
