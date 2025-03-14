@@ -16,23 +16,25 @@ const FadeIn = ({
   duration = 0.5,
   className = '',
 }: FadeInProps) => {
-  let initial = { opacity: 0 };
-  
-  if (direction === 'up') {
-    initial = { ...initial, y: 30 };
-  } else if (direction === 'down') {
-    initial = { ...initial, y: -30 };
-  } else if (direction === 'left') {
-    initial = { ...initial, x: 30 };
-  } else if (direction === 'right') {
-    initial = { ...initial, x: -30 };
-  }
+  const variants = {
+    hidden: {
+      opacity: 0,
+      y: direction === 'up' ? 30 : direction === 'down' ? -30 : 0,
+      x: direction === 'left' ? 30 : direction === 'right' ? -30 : 0,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      x: 0,
+    }
+  };
 
   return (
     <motion.div
-      initial={initial}
-      whileInView={{ opacity: 1, y: 0, x: 0 }}
+      initial="hidden"
+      whileInView="visible"
       viewport={{ once: true, margin: '-50px' }}
+      variants={variants}
       transition={{
         duration,
         delay,
