@@ -58,6 +58,7 @@ const UploadCreative = () => {
       title: '',
       description: '',
     },
+    mode: 'onChange', // This enables validation as fields change
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +66,10 @@ const UploadCreative = () => {
     if (!file) return;
     
     // Set file in form
-    form.setValue('file', file);
+    form.setValue('file', file, { 
+      shouldValidate: true, // This triggers validation when file is set
+      shouldDirty: true 
+    });
     
     // Create preview URL
     const url = URL.createObjectURL(file);
@@ -178,7 +182,7 @@ const UploadCreative = () => {
                   </Button>
                   <Button 
                     type="submit" 
-                    disabled={isLoading || !form.formState.isValid}
+                    disabled={isLoading || !form.formState.isDirty || !form.formState.isValid}
                   >
                     {isLoading ? 'Uploading...' : 'Submit Creative'}
                   </Button>
