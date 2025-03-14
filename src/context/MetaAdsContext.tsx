@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from "@/hooks/use-toast";
-import { MetaAdsAccount, MetaAdsAd, MetaAdsInsight } from '@/types/metaAds';
+import { MetaAdsAccount, MetaAdsCampaign, MetaAdsAdSet, MetaAdsAd, MetaAdsInsight } from '@/types/metaAds';
 import { useAuth } from './AuthContext';
 import { Creative } from '@/types/creative';
 import { useCreatives } from './CreativeContext';
@@ -106,6 +106,11 @@ export const MetaAdsProvider = ({ children }: { children: ReactNode }) => {
       setAccount(mockAccount);
       setConnected(true);
       
+      toast({
+        title: "Connected to Meta Ads",
+        description: "Your Meta Ads account has been connected successfully.",
+      });
+      
       return;
     } catch (error) {
       console.error('Meta Ads connection error:', error);
@@ -139,6 +144,11 @@ export const MetaAdsProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem(`adcreativex_meta_${user.id}`);
       localStorage.removeItem(`adcreativex_meta_ads_${user.id}`);
       localStorage.removeItem(`adcreativex_meta_insights_${user.id}`);
+      
+      toast({
+        title: "Disconnected from Meta Ads",
+        description: "Your Meta Ads account has been disconnected.",
+      });
       
       return;
     } catch (error) {
@@ -206,8 +216,8 @@ export const MetaAdsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Sync creative performance with Meta Ads data
-  const syncCreativePerformance = async (creativeId: string) => {
+  // Sync creative performance with Meta Ads data - Fixed return type to Promise<void>
+  const syncCreativePerformance = async (creativeId: string): Promise<void> => {
     try {
       if (!connected || !account) {
         throw new Error('Meta Ads not connected');
@@ -251,7 +261,13 @@ export const MetaAdsProvider = ({ children }: { children: ReactNode }) => {
         conversions: ad.conversions
       });
 
-      return ad;
+      toast({
+        title: "Performance Synced",
+        description: "Creative performance has been updated from Meta Ads data.",
+      });
+      
+      // Return void to match the type definition
+      return;
     } catch (error) {
       console.error('Error syncing creative performance:', error);
       toast({

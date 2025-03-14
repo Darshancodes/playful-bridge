@@ -1,13 +1,35 @@
 
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  ChevronRight, 
+  PlusCircle, 
+  FileCheck, 
+  FileX, 
+  DollarSign, 
+  BarChart3, 
+  Upload
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCreatives } from '@/context/CreativeContext';
-import { ChevronRight, DollarSign, Image, BarChart, Upload } from 'lucide-react';
+import { useMetaAds } from '@/context/MetaAdsContext';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { format } from 'date-fns';
 import FadeIn from '@/components/animation/FadeIn';
 
 const Dashboard = () => {

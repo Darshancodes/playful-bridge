@@ -1,190 +1,124 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
 import { useAuth } from '@/context/AuthContext';
 import { useMetaAds } from '@/context/MetaAdsContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import FadeIn from '@/components/animation/FadeIn';
-import { Facebook } from 'lucide-react';
 
-// Define validation schema based on user role
-const brandSchema = z.object({
-  companyName: z.string().min(2, 'Company name is required'),
-  industry: z.string().min(2, 'Industry is required'),
-  website: z.string().url('Please enter a valid URL'),
+const profileSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  email: z.string().email({ message: 'Please enter a valid email' }).optional(),
   bio: z.string().optional(),
 });
 
-const creatorSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
-  specialty: z.string().min(2, 'Specialty is required'),
-  portfolioLink: z.string().url('Please enter a valid URL'),
-  bio: z.string().optional(),
+const brandProfileSchema = profileSchema.extend({
+  companyName: z.string().min(2, { message: 'Company name must be at least 2 characters' }),
+  industry: z.string().optional(),
+  website: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
+});
+
+const creatorProfileSchema = profileSchema.extend({
+  specialty: z.string().optional(),
+  portfolioLink: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
 });
 
 const Profile = () => {
-  const { user, updateProfile } = useAuth();
-  const { connected, connecting, connectToMetaAds, disconnectMetaAds } = useMetaAds();
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user, updateProfile, logout } = useAuth();
+  const { connected, connecting, connectToMetaAds, disconnectMetaAds, account } = useMetaAds();
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect if not logged in
   if (!user) {
     navigate('/login');
     return null;
   }
 
-  // Determine which schema to use based on user role
-  const schema = user.role === 'brand' ? brandSchema : creatorSchema;
-  
-  // Set up form with default values from user profile
+  const isBrand = user.role === 'brand';
+  const schema = isBrand ? brandProfileSchema : creatorProfileSchema;
+
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: user.role === 'brand' 
-      ? {
-          companyName: user.companyName || '',
-          industry: user.industry || '',
-          website: user.website || '',
-          bio: user.bio || '',
-        }
-      : {
-          name: user.name || '',
-          specialty: user.specialty || '',
-          portfolioLink: user.portfolioLink || '',
-          bio: user.bio || '',
-        },
+    defaultValues: {
+      name: user.name || '',
+      email: user.email || '',
+      bio: user.bio || '',
+      ...(isBrand
+        ? {
+            companyName: user.companyName || '',
+            industry: user.industry || '',
+            website: user.website || '',
+          }
+        : {
+            specialty: user.specialty || '',
+            portfolioLink: user.portfolioLink || '',
+          }),
+    },
   });
 
   const onSubmit = async (data: any) => {
-    setIsSubmitting(true);
+    setIsLoading(true);
     try {
-      // In a real app, this would make an API call
-      // For the MVP, we'll just update the local state
-      updateProfile(data);
-      
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated.",
-      });
+      await updateProfile(data);
+      form.reset(data);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "There was a problem updating your profile.",
-        variant: "destructive",
-      });
+      console.error('Profile update error:', error);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const handleMetaConnect = async () => {
+  const handleMetaConnection = async () => {
     try {
-      await connectToMetaAds();
-      toast({
-        title: "Connected to Meta Ads",
-        description: "Your Meta Ads account has been successfully connected.",
-      });
+      if (connected) {
+        await disconnectMetaAds();
+      } else {
+        await connectToMetaAds();
+      }
     } catch (error) {
-      toast({
-        title: "Connection Failed",
-        description: "There was a problem connecting to Meta Ads.",
-        variant: "destructive",
-      });
+      console.error('Meta connection error:', error);
     }
   };
 
-  const handleMetaDisconnect = async () => {
-    try {
-      await disconnectMetaAds();
-      toast({
-        title: "Disconnected from Meta Ads",
-        description: "Your Meta Ads account has been disconnected.",
-      });
-    } catch (error) {
-      toast({
-        title: "Disconnection Failed",
-        description: "There was a problem disconnecting from Meta Ads.",
-        variant: "destructive",
-      });
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <FadeIn>
-          <h1 className="text-3xl font-bold mb-1">Profile Settings</h1>
-          <p className="text-gray-600 mb-8">Manage your account information</p>
+          <h1 className="text-3xl font-bold">Profile Settings</h1>
+          <p className="text-gray-600 mt-1 mb-8">Manage your account settings and preferences</p>
         </FadeIn>
 
-        <FadeIn delay={0.1}>
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Update your profile details
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {user.role === 'brand' ? (
-                    // Brand-specific fields
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="companyName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Company Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your company name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="industry"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Industry</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your industry" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="website"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Website</FormLabel>
-                            <FormControl>
-                              <Input placeholder="https://example.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  ) : (
-                    // Creator-specific fields
-                    <>
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <FadeIn delay={0.1}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Personal Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                       <FormField
                         control={form.control}
                         name="name"
@@ -192,125 +126,198 @@ const Profile = () => {
                           <FormItem>
                             <FormLabel>Full Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Your name" {...field} />
+                              <Input {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
-                        name="specialty"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Specialty</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="Your creative specialty" {...field} />
+                              <Input {...field} disabled />
                             </FormControl>
+                            <FormDescription>
+                              Email cannot be changed
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
-                        name="portfolioLink"
+                        name="bio"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Portfolio Link</FormLabel>
+                            <FormLabel>Bio</FormLabel>
                             <FormControl>
-                              <Input placeholder="https://yourportfolio.com" {...field} />
+                              <textarea
+                                className="flex min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Tell us about yourself"
+                                {...field}
+                              />
                             </FormControl>
+                            <FormDescription>
+                              A brief description about you or your business
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </>
-                  )}
-                  
-                  {/* Common fields for both user types */}
-                  <FormField
-                    control={form.control}
-                    name="bio"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bio</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Tell us a bit about yourself or your company" 
-                            className="resize-none" 
-                            rows={4} 
-                            {...field} 
+
+                      {isBrand ? (
+                        <>
+                          <Separator className="my-6" />
+                          <h3 className="text-lg font-medium mb-4">Brand Information</h3>
+
+                          <FormField
+                            control={form.control}
+                            name="companyName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Company Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : "Save Changes"}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
 
-          {user.role === 'brand' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Meta Ads Integration</CardTitle>
-                <CardDescription>
-                  Connect your Meta Ads account to track ad performance and spend
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-blue-100 p-3 rounded-full">
-                      <Facebook className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Meta Ads Account</h3>
-                      <p className="text-sm text-gray-500">
-                        {connected ? "Connected" : "Not connected"}
-                      </p>
-                    </div>
-                  </div>
+                          <FormField
+                            control={form.control}
+                            name="industry"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Industry</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
-                  {connected ? (
-                    <div>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Your Meta Ads account is connected. You can now track performance and spend for your creatives.
+                          <FormField
+                            control={form.control}
+                            name="website"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Company Website</FormLabel>
+                                <FormControl>
+                                  <Input type="url" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <Separator className="my-6" />
+                          <h3 className="text-lg font-medium mb-4">Creator Information</h3>
+
+                          <FormField
+                            control={form.control}
+                            name="specialty"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Specialty</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                  Your area of expertise (e.g., Video Editing, Photography)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="portfolioLink"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Portfolio Link</FormLabel>
+                                <FormControl>
+                                  <Input type="url" {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                  Link to your portfolio website or social media
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </>
+                      )}
+
+                      <div className="flex justify-end">
+                        <Button type="submit" disabled={isLoading}>
+                          {isLoading ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </FadeIn>
+          </div>
+
+          <div>
+            <FadeIn delay={0.2}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isBrand && (
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium">Meta Ads Connection</h3>
+                      <p className="text-xs text-gray-500">
+                        {connected
+                          ? `Connected to: ${account?.name}`
+                          : 'Connect to Meta Ads to track performance'}
                       </p>
-                      <Button 
-                        variant="outline" 
-                        onClick={handleMetaDisconnect} 
+                      <Button
+                        onClick={handleMetaConnection}
+                        variant={connected ? 'destructive' : 'default'}
                         disabled={connecting}
+                        className="w-full"
                       >
-                        Disconnect Account
-                      </Button>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Connect your Meta Ads account to track performance metrics and ad spend for your creatives.
-                      </p>
-                      <Button 
-                        onClick={handleMetaConnect} 
-                        disabled={connecting}
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        {connecting ? "Connecting..." : "Connect Meta Ads"}
+                        {connecting
+                          ? 'Connecting...'
+                          : connected
+                          ? 'Disconnect Meta Ads'
+                          : 'Connect Meta Ads'}
                       </Button>
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </FadeIn>
+
+                  <Separator className="my-4" />
+
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Account Actions</h3>
+                    <Button
+                      onClick={handleLogout}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Log Out
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </FadeIn>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
