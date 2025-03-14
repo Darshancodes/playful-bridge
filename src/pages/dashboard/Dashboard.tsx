@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { useAuth } from '@/context/AuthContext';
 import { useCreatives } from '@/context/CreativeContext';
-import { ChevronRight, DollarSign, Image, BarChart } from 'lucide-react';
+import { ChevronRight, DollarSign, Image, BarChart, Upload } from 'lucide-react';
 import FadeIn from '@/components/animation/FadeIn';
 
 const Dashboard = () => {
