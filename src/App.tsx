@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CreativeProvider } from './context/CreativeContext';
@@ -13,6 +12,7 @@ import UploadCreative from './pages/creatives/UploadCreative';
 import CreativeGallery from './pages/creatives/CreativeGallery';
 import CreativeDetail from './pages/creatives/CreativeDetail';
 import Profile from './pages/profile/Profile';
+import { AdSpendPage } from "./pages/ad-spend/AdSpendPage";
 
 function App() {
   return (
@@ -29,6 +29,7 @@ function App() {
               <Route path="/creatives" element={<CreativeGallery />} />
               <Route path="/creatives/:id" element={<CreativeDetail />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/ad-spend" element={<AdSpendPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />

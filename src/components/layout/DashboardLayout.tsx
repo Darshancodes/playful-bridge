@@ -1,4 +1,3 @@
-
 import { ReactNode, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,8 @@ import {
   UserCircle, 
   LogOut, 
   Menu, 
-  X 
+  X,
+  BarChart3 
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -44,6 +44,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       href: '/upload',
       icon: Upload,
       showFor: 'creator', // Only show for creators
+    },
+    {
+      name: 'Ad Spend',
+      href: '/ad-spend',
+      icon: BarChart3,
+      showFor: 'brand', // Only show for brands
     },
     {
       name: 'Profile',
